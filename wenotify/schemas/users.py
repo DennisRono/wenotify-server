@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
-from pydantic import EmailStr, Field, HttpUrl, constr, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, HttpUrl, constr, ConfigDict
 
 from wenotify.schemas.base import (
     BaseSchemaCreate,
@@ -88,3 +88,16 @@ class UserProfileResponse(BaseSchemaResponse):
     county: Optional[str] = None
     sub_county: Optional[str] = None
     created_at: datetime
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+class LoginResponse(BaseModel):
+    user: UserResponse
+    access_token: str
+    refresh_token: str
+    token_type: str
+    expires_in: datetime
+    

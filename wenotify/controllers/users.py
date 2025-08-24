@@ -1,13 +1,15 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import and_, select, update
 from sqlalchemy.orm import selectinload
-from wenotify.schemas.users import UserCreate, UserUpdate, PasswordChangeRequest
+from wenotify.dependencies.auth import create_access_token, create_refresh_token
+from wenotify.schemas.users import LoginRequest, LoginResponse, UserCreate, UserResponse, UserUpdate, PasswordChangeRequest
 from wenotify.models.user import User
 from wenotify.enums import UserRole, UserStatus
 from fastapi import HTTPException, status
 from passlib.context import CryptContext
 from uuid import uuid4
 from datetime import datetime, timezone
+from wenotify.core.config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -117,3 +119,52 @@ class UsersController:
         await db.commit()
         
         return {"message": "Account deactivated successfully"}
+
+    async def authenticate_user(self, login_data: LoginRequest, db: AsyncSession) -> LoginResponse:
+        email = login_data.email.strip().lower()
+
+        stmt = select(User).where(
+            and_(
+                User.email == email,
+                User.is_active == True,
+            )
+        )
+        result = await db.scalars(stmt)
+        user = result.first()
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
+
+        # Verify password
+        if not pwd_context.verify(login_data.password, user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
+
+        token_data = {
+            "sub": str(user.id),
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "phone_number": user.phone_number,
+            "role": user.role.value if hasattr(user.role, "value") else str(user.role),
+            "status": user.status.value if hasattr(user.status, "value") else str(user.status),
+            "is_verified": user.is_verified,
+        }
+
+        access_token = create_access_token(data=token_data)
+        refresh_token = create_refresh_token(data={"sub": str(user.id)})
+
+        return LoginResponse(
+            user=UserResponse.model_validate(user),
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer",
+            expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        )
+    
+    

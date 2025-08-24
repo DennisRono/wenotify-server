@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Form, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from wenotify.controllers.users import UsersController
 from wenotify.dependencies.auth import GetCurrentUser
 from wenotify.db.session import get_async_db
 from wenotify.schemas.users import (
+    LoginRequest,
     UserCreate,
     UserResponse,
     UserUpdate,
@@ -13,6 +14,15 @@ from wenotify.schemas.users import (
 
 users_router = APIRouter()
 users_controller = UsersController()
+
+@users_router.post("/auth/login")
+async def authenticate_user(
+    username: str = Form(...),
+    password: str = Form(...),
+    db: AsyncSession = Depends(get_async_db),
+):
+    login_data = LoginRequest(email=username, password=password)
+    return await users_controller.authenticate_user(login_data=login_data, db=db)
 
 
 @users_router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
