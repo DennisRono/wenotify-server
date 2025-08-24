@@ -1,0 +1,36 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wenotify_api
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - '8500:8500'
+    environment:
+      PYTHONPATH: "/app"
+      GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
+      POSTGRES_SERVER: $POSTGRES_SERVER
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+      POSTGRES_DB: $POSTGRES_DB
+      JWT_SECRET_KEY: $JWT_SECRET_KEY
+    volumes:
+      - ./logs:/app/logs
+
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          ignore: .venv/
+
+        - action: sync+restart
+          path: .env-docker
+          target: /app/.env-docker
+
+        - action: rebuild
+          path: requirements.txt
+

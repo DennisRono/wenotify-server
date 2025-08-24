@@ -1,0 +1,18 @@
+.github_token
+.env
+.env-docker
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+.vercel
+
+# logs
+logs

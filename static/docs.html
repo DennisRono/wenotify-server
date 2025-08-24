@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ title|default("Docs")}} | NPAY Docs</title>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="upgrade-insecure-requests"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/rapidoc@latest/dist/rapidoc-min.js"
+    ></script>
+  </head>
+  <body>
+    <rapi-doc
+      spec-url="{{ schema_url }}"
+      allow-authentication="true"
+      allow-search="true"
+      allow-try="true"
+      theme="dark"
+      schema-style="table"
+      show-method-in-nav-bar="as-colored-text"
+      allow-server-selection="false"
+      show-header="true"
+      info-description-headings-in-navbar="true"
+      persist-auth="true"
+      schema-description-expanded="true"
+    >
+    </rapi-doc>
+  </body>
+</html>
