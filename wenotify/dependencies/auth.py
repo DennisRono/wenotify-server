@@ -1,29 +1,28 @@
 from datetime import datetime, timedelta, timezone
-import uuid
+from uuid import UUID
 from fastapi import Header, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from typing import Annotated, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from wenotify.core.config import settings
 from wenotify.core.logging import logger
+from wenotify.enums import UserStatus
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/api/v1/users/auth/login")
 GetToken = Annotated[str, Depends(oauth2_scheme)]
 
 
 class UserBase(BaseModel):
-    user_id: str
-    username: str
-    email: str
+    user_id: UUID
+    email: EmailStr
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    phone: Optional[str] = None
-    timezone: str = "UTC"
+    phone_number: Optional[str] = None
     role: Optional[str] = None
-    permissions: dict = {}
-    preferences: dict = {}
+    status: UserStatus
+    is_verified: bool
 
 
 async def get_current_user(token: GetToken):
@@ -33,17 +32,15 @@ async def get_current_user(token: GetToken):
         )
 
         user_id = payload.get("sub")
-        username = payload.get("username")
         email = payload.get("email")
         first_name = payload.get("first_name")
         last_name = payload.get("last_name")
-        phone = payload.get("phone")
-        timezone = payload.get("timezone", "UTC")
+        phone_number = payload.get("phone_number")
         role = payload.get("role")
-        permissions = payload.get("permissions", {})
-        preferences = payload.get("preferences", {})
+        user_status = payload.get("status")
+        is_verified = payload.get("is_verified")
 
-        if not user_id or not username or not email:
+        if not user_id or not email:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Some credentials are missing in token",
@@ -52,16 +49,14 @@ async def get_current_user(token: GetToken):
 
         try:
             return UserBase(
-                id=user_id,
+                user_id=user_id,
                 email=email,
-                username=username,
                 first_name=first_name,
                 last_name=last_name,
-                phone=phone,
-                timezone=timezone,
+                phone_number=phone_number,
                 role=role,
-                permissions=permissions,
-                preferences=preferences,
+                status=user_status,
+                is_verified=is_verified
             )
         except (ValueError, TypeError) as e:
             print(f"Error creating UserBase: {e}")
