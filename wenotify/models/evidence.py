@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import BigInteger, Index, String, Text
+from sqlalchemy import BigInteger, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -20,6 +20,7 @@ class Evidence(Base, BaseMixin):
     # Crime Report Reference
     crime_report_id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
+        ForeignKey("crime_reports.id", ondelete="CASCADE"),
         nullable=False,
         index=True
     )

@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, List
 from uuid import UUID
 
-from sqlalchemy import Boolean, Float, Index, String, Text
+from sqlalchemy import Boolean, Float, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -32,6 +32,7 @@ class CrimeReport(Base, BaseMixin):
     # Reporter Information
     reporter_id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True
     )
@@ -75,6 +76,7 @@ class CrimeReport(Base, BaseMixin):
     
     assigned_officer_id: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
         nullable=True,
         index=True
     )
@@ -82,6 +84,7 @@ class CrimeReport(Base, BaseMixin):
     # Location Information
     location_id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
+        ForeignKey("locations.id", ondelete="CASCADE"),
         nullable=False,
         index=True
     )

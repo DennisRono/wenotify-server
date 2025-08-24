@@ -9,9 +9,7 @@ from wenotify.models import User, UserRole, UserStatus
 
 def hash_password(plain_password: str) -> str:
     """Hash a password securely."""
-    return bcrypt.hashpw(plain_password.encode("utf-8"), bcrypt.gensalt()).decode(
-        "utf-8"
-    )
+    return bcrypt.hashpw(plain_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 async def seed_first_user():
@@ -24,21 +22,17 @@ async def seed_first_user():
 
         first_user = User(
             id=uuid4(),
-            email="admin@example.com",
-            username="admin",
-            first_name="System",
-            last_name="Administrator",
-            password_hash=hash_password("ChangeMe123!"),
-            is_active=True,
-            status=UserStatus.ACTIVE,
+            email="admin@gmail.com",
+            phone_number="+254700000000",
+            password_hash=hash_password("Password@1"),
+            first_name="Admin",
+            last_name="User",
             role=UserRole.ADMIN,
-            permissions={},
-            last_login_at=None,
-            failed_login_attempts=0,
-            locked_until=None,
-            phone=None,
-            timezone="UTC",
-            preferences={},
+            status=UserStatus.ACTIVE,
+            is_verified=True,
+            is_active=True,
+            email_verified=True,
+            phone_verified=True,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
