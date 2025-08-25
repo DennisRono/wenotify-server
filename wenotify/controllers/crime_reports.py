@@ -34,13 +34,13 @@ class CrimeReportsController:
             latitude=report_data.latitude,
             longitude=report_data.longitude,
             address=report_data.address,
-            reporter_id=current_user.id if not report_data.is_anonymous else None,
+            reporter_id=current_user.user_id if not report_data.is_anonymous else None,
             is_anonymous=report_data.is_anonymous,
             status=ReportStatus.PENDING,
             priority_level=report_data.priority_level or 1,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
-            created_by_id=current_user.id
+            created_by_id=current_user.user_id
         )
         
         db.add(new_report)
@@ -67,7 +67,7 @@ class CrimeReportsController:
         if current_user.role == UserRole.CITIZEN:
             conditions.append(
                 or_(
-                    CrimeReport.reporter_id == current_user.id,
+                    CrimeReport.reporter_id == current_user.user_id,
                     CrimeReport.is_anonymous == False
                 )
             )
@@ -100,7 +100,7 @@ class CrimeReportsController:
         
         # Access control
         if (current_user.role == UserRole.CITIZEN and 
-            report.reporter_id != current_user.id and 
+            report.reporter_id != current_user.user_id and 
             report.is_anonymous):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -120,7 +120,7 @@ class CrimeReportsController:
         
         # Permission check
         if (current_user.role == UserRole.CITIZEN and 
-            report.reporter_id != current_user.id):
+            report.reporter_id != current_user.user_id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can only update your own reports"
@@ -130,7 +130,7 @@ class CrimeReportsController:
         update_data = report_data.model_dump(exclude_unset=True)
         if update_data:
             update_data['updated_at'] = datetime.now(timezone.utc)
-            update_data['updated_by_id'] = current_user.id
+            update_data['updated_by_id'] = current_user.user_id
             
             stmt = update(CrimeReport).where(CrimeReport.id == report_id).values(**update_data)
             await db.execute(stmt)
@@ -159,7 +159,7 @@ class CrimeReportsController:
         update_values = {
             'status': status_data.status,
             'updated_at': datetime.now(timezone.utc),
-            'updated_by_id': current_user.id
+            'updated_by_id': current_user.user_id
         }
         
         if status_data.assigned_officer_id:
@@ -185,7 +185,7 @@ class CrimeReportsController:
         
         # Permission check
         if (current_user.role == UserRole.CITIZEN and 
-            report.reporter_id != current_user.id):
+            report.reporter_id != current_user.user_id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can only delete your own reports"
@@ -195,7 +195,7 @@ class CrimeReportsController:
         stmt = update(CrimeReport).where(CrimeReport.id == report_id).values(
             deleted_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
-            updated_by_id=current_user.id
+            updated_by_id=current_user.user_id
         )
         await db.execute(stmt)
         await db.commit()

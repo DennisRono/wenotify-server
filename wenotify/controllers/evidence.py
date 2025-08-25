@@ -25,7 +25,7 @@ class EvidenceController:
         
         # Access control
         if (current_user.role == UserRole.CITIZEN and 
-            report.reporter_id != current_user.id):
+            report.reporter_id != current_user.user_id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can only upload evidence to your own reports"
@@ -69,11 +69,11 @@ class EvidenceController:
             file_path=file_path,
             file_size=len(content),
             mime_type=file.content_type,
-            uploaded_by_id=current_user.id,
+            uploaded_by_id=current_user.user_id,
             is_verified=False,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
-            created_by_id=current_user.id
+            created_by_id=current_user.user_id
         )
         
         db.add(new_evidence)
@@ -93,7 +93,7 @@ class EvidenceController:
         
         # Access control
         if (current_user.role == UserRole.CITIZEN and 
-            report.reporter_id != current_user.id and 
+            report.reporter_id != current_user.user_id and 
             report.is_anonymous):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -129,7 +129,7 @@ class EvidenceController:
         
         # Access control
         if (current_user.role == UserRole.CITIZEN and 
-            evidence.crime_report.reporter_id != current_user.id):
+            evidence.crime_report.reporter_id != current_user.user_id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied"
@@ -151,7 +151,7 @@ class EvidenceController:
         
         # Permission check
         if (current_user.role == UserRole.CITIZEN and 
-            evidence.uploaded_by_id != current_user.id):
+            evidence.uploaded_by_id != current_user.user_id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can only update your own evidence"
@@ -161,7 +161,7 @@ class EvidenceController:
         update_data = evidence_data.model_dump(exclude_unset=True)
         if update_data:
             update_data['updated_at'] = datetime.now(timezone.utc)
-            update_data['updated_by_id'] = current_user.id
+            update_data['updated_by_id'] = current_user.user_id
             
             stmt = update(Evidence).where(Evidence.id == evidence_id).values(**update_data)
             await db.execute(stmt)
@@ -181,7 +181,7 @@ class EvidenceController:
         
         # Permission check
         if (current_user.role == UserRole.CITIZEN and 
-            evidence.uploaded_by_id != current_user.id):
+            evidence.uploaded_by_id != current_user.user_id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can only delete your own evidence"
@@ -191,7 +191,7 @@ class EvidenceController:
         stmt = update(Evidence).where(Evidence.id == evidence_id).values(
             deleted_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
-            updated_by_id=current_user.id
+            updated_by_id=current_user.user_id
         )
         await db.execute(stmt)
         await db.commit()

@@ -32,7 +32,7 @@ class LocationsController:
             is_active=True,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
-            created_by_id=current_user.id
+            created_by_id=current_user.user_id
         )
         
         db.add(new_location)
@@ -118,7 +118,7 @@ class LocationsController:
         update_data = location_data.model_dump(exclude_unset=True)
         if update_data:
             update_data['updated_at'] = datetime.now(timezone.utc)
-            update_data['updated_by_id'] = current_user.id
+            update_data['updated_by_id'] = current_user.user_id
             
             stmt = update(Location).where(Location.id == location_id).values(**update_data)
             await db.execute(stmt)
@@ -148,7 +148,7 @@ class LocationsController:
             is_active=False,
             deleted_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
-            updated_by_id=current_user.id
+            updated_by_id=current_user.user_id
         )
         await db.execute(stmt)
         await db.commit()

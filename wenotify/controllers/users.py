@@ -47,7 +47,7 @@ class UsersController:
         return new_user
     
     async def get_user_profile(self, current_user, db: AsyncSession):
-        stmt = select(User).where(User.id == current_user.id)
+        stmt = select(User).where(User.id == current_user.user_id)
         user = await db.scalar(stmt)
         if not user:
             raise HTTPException(
@@ -57,7 +57,7 @@ class UsersController:
         return user
     
     async def update_user_profile(self, user_data: UserUpdate, current_user, db: AsyncSession):
-        stmt = select(User).where(User.id == current_user.id)
+        stmt = select(User).where(User.id == current_user.user_id)
         user = await db.scalar(stmt)
         if not user:
             raise HTTPException(
@@ -69,9 +69,9 @@ class UsersController:
         update_data = user_data.model_dump(exclude_unset=True)
         if update_data:
             update_data['updated_at'] = datetime.now(timezone.utc)
-            update_data['updated_by_id'] = current_user.id
+            update_data['updated_by_id'] = current_user.user_id
             
-            stmt = update(User).where(User.id == current_user.id).values(**update_data)
+            stmt = update(User).where(User.id == current_user.user_id).values(**update_data)
             await db.execute(stmt)
             await db.commit()
             await db.refresh(user)
@@ -79,7 +79,7 @@ class UsersController:
         return user
     
     async def change_password(self, password_data: PasswordChangeRequest, current_user, db: AsyncSession):
-        stmt = select(User).where(User.id == current_user.id)
+        stmt = select(User).where(User.id == current_user.user_id)
         user = await db.scalar(stmt)
         if not user:
             raise HTTPException(
@@ -98,10 +98,10 @@ class UsersController:
         new_password_hash = pwd_context.hash(password_data.new_password)
         
         # Update password
-        stmt = update(User).where(User.id == current_user.id).values(
+        stmt = update(User).where(User.id == current_user.user_id).values(
             password_hash=new_password_hash,
             updated_at=datetime.now(timezone.utc),
-            updated_by_id=current_user.id
+            updated_by_id=current_user.user_id
         )
         await db.execute(stmt)
         await db.commit()
@@ -109,11 +109,11 @@ class UsersController:
         return {"message": "Password updated successfully"}
     
     async def deactivate_account(self, current_user, db: AsyncSession):
-        stmt = update(User).where(User.id == current_user.id).values(
+        stmt = update(User).where(User.id == current_user.user_id).values(
             status=UserStatus.INACTIVE,
             deleted_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
-            updated_by_id=current_user.id
+            updated_by_id=current_user.user_id
         )
         await db.execute(stmt)
         await db.commit()

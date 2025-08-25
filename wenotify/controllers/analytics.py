@@ -452,17 +452,20 @@ class AnalyticsController:
         ) or 0
 
         # Recent trends (last 7 days)
+        day_trunc = func.date_trunc("day", CrimeReport.created_at).label("day")
+
         weekly_trend_stmt = (
             select(
-                func.date_trunc("day", CrimeReport.created_at).label("day"),
+                day_trunc,
                 func.count(CrimeReport.id).label("count"),
             )
             .where(
                 and_(CrimeReport.created_at >= week_start, CrimeReport.deleted_at.is_(None))
             )
-            .group_by(func.date_trunc("day", CrimeReport.created_at))
-            .order_by("day")
+            .group_by(day_trunc)
+            .order_by(day_trunc)
         )
+
         weekly_result = await db.execute(weekly_trend_stmt)
         recent_trends = [
             TrendDataPoint(period=row.day.strftime("%Y-%m-%d"), count=row.count)

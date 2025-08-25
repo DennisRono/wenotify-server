@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 class NotificationsController:
     async def get_user_notifications(self, skip: int, limit: int, unread_only: bool, current_user, db: AsyncSession):
         # Build query
-        conditions = [Notification.user_id == current_user.id]
+        conditions = [Notification.user_id == current_user.user_id]
         
         if unread_only:
             conditions.append(Notification.status == NotificationStatus.UNREAD)
@@ -34,7 +34,7 @@ class NotificationsController:
             )
         
         # Access control - users can only view their own notifications
-        if notification.user_id != current_user.id:
+        if notification.user_id != current_user.user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can only view your own notifications"
@@ -53,7 +53,7 @@ class NotificationsController:
             )
         
         # Access control
-        if notification.user_id != current_user.id:
+        if notification.user_id != current_user.user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can only update your own notifications"
@@ -64,7 +64,7 @@ class NotificationsController:
             status=NotificationStatus.READ,
             read_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
-            updated_by_id=current_user.id
+            updated_by_id=current_user.user_id
         )
         await db.execute(stmt)
         await db.commit()
@@ -75,14 +75,14 @@ class NotificationsController:
     async def mark_all_notifications_read(self, current_user, db: AsyncSession):
         stmt = update(Notification).where(
             and_(
-                Notification.user_id == current_user.id,
+                Notification.user_id == current_user.user_id,
                 Notification.status == NotificationStatus.UNREAD
             )
         ).values(
             status=NotificationStatus.READ,
             read_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
-            updated_by_id=current_user.id
+            updated_by_id=current_user.user_id
         )
         
         result = await db.execute(stmt)
@@ -101,7 +101,7 @@ class NotificationsController:
             )
         
         # Access control
-        if notification.user_id != current_user.id:
+        if notification.user_id != current_user.user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can only delete your own notifications"
@@ -111,7 +111,7 @@ class NotificationsController:
         stmt = update(Notification).where(Notification.id == notification_id).values(
             deleted_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
-            updated_by_id=current_user.id
+            updated_by_id=current_user.user_id
         )
         await db.execute(stmt)
         await db.commit()

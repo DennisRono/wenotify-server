@@ -176,19 +176,3 @@ async def export_analytics_data(
     # Implementation would go in controller
     raise HTTPException(status_code=501, detail="Export analytics endpoint coming soon")
 
-
-@analytics_router.get("/health")
-async def analytics_health_check(
-    current_user: GetCurrentUser,
-    db: AsyncSession = Depends(get_async_db),
-):
-    """Check analytics system health and data quality."""
-    return {
-        "status": "healthy",
-        "data_quality_score": 95.5,
-        "last_updated": datetime.now(),
-        "available_endpoints": [
-            "crime-stats", "trends", "hotspots", "predictions", 
-            "dashboard-summary", "performance", "geographic", "time-patterns"
-        ]
-    }
