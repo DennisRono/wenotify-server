@@ -1,33 +1,653 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>{{ title|default("Docs")}} | NPAY Docs</title>
+    <title>NP Platform API Explorer | Provisioning Docs</title>
     <meta charset="utf-8" />
     <meta
       http-equiv="Content-Security-Policy"
       content="upgrade-insecure-requests"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Interactive API documentation for NP Platform"
+    />
+    <link
+      rel="icon"
+      href="https://nullchemy.com/static/media/nullchemy_new_logo_3d.238319aebab004ffd436.png"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <script
       type="module"
       src="https://cdn.jsdelivr.net/npm/rapidoc@latest/dist/rapidoc-min.js"
     ></script>
+    <style>
+      :root {
+        --primary-color: #3b82f6;
+        --primary-hover: #2563eb;
+        --primary-light: rgba(59, 130, 246, 0.1);
+        --bg-dark: #0f172a;
+        --bg-darker: #0a0f1d;
+        --bg-content: #111827;
+        --text-light: #f8fafc;
+        --text-muted: #94a3b8;
+        --border-color: rgba(148, 163, 184, 0.1);
+        --card-bg: #1e293b;
+        --card-border: #334155;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --error-color: #ef4444;
+        --button-bg: #3b82f6;
+        --button-hover: #2563eb;
+        --button-text: #ffffff;
+        --button-outline-bg: rgba(59, 130, 246, 0.1);
+        --button-outline-text: #3b82f6;
+        --button-outline-border: #3b82f6;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-darker);
+      }
+
+      rapi-doc {
+        --primary-color: var(--primary-color);
+        --primary-hover: var(--primary-hover);
+        --bg-color: var(--bg-content);
+        --fg-color: var(--text-light);
+        --header-bg: var(--bg-darker);
+        --header-fg: var(--text-light);
+        --nav-bg-color: var(--bg-darker);
+        --nav-text-color: var(--text-light);
+        --nav-hover-bg-color: var(--primary-light);
+        --nav-hover-text-color: var(--primary-color);
+        --nav-accent-color: var(--primary-color);
+        --nav-item-border-color: var(--border-color);
+
+        --btn-border-color: var(--button-outline-border);
+        --btn-primary-color: var(--button-bg);
+        --btn-primary-text-color: var(--button-text);
+        --btn-primary-hover-color: var(--button-hover);
+        --btn-primary-hover-text-color: var(--button-text);
+
+        --code-bg: #1a2234;
+        --code-border-color: var(--border-color);
+        --input-bg: #1a2234;
+        --tree-item-hover-bg: var(--primary-light);
+        --font-size-small: 13px;
+        --font-size-regular: 14px;
+        --font-size-medium: 15px;
+        --font-size-large: 16px;
+
+        --border-radius-small: 4px;
+        --border-radius-regular: 6px;
+        --border-radius-large: 8px;
+
+        --bg2: var(--bg-content);
+        --fg2: var(--text-light);
+        --bg3: var(--card-bg);
+        --fg3: var(--text-light);
+        --light-bg: var(--bg-content);
+        --light-fg: var(--text-light);
+        --alternate-bg: var(--card-bg);
+
+        --success-color: var(--success-color);
+        --success-bg: rgba(16, 185, 129, 0.1);
+        --error-color: var(--error-color);
+        --error-bg: rgba(239, 68, 68, 0.1);
+        --info-bg: rgba(59, 130, 246, 0.1);
+        --info-color: var(--primary-color);
+
+        --tr-hover-bg: rgba(59, 130, 246, 0.05);
+        --tr-border-color: var(--border-color);
+
+        --schema-bg: var(--card-bg);
+        --schema-fg: var(--text-light);
+        --schema-description-fg: var(--text-muted);
+        --schema-border-color: var(--border-color);
+
+        --response-panel-bg: var(--bg-content);
+        --response-panel-fg: var(--text-light);
+      }
+
+      .header-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 16px;
+        height: 60px;
+      }
+
+      .header-logo img {
+        height: 36px;
+        width: auto;
+        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3));
+        transition: transform 0.3s ease;
+      }
+
+      .header-logo:hover img {
+        transform: scale(1.05);
+      }
+
+      .header-logo span {
+        font-weight: 600;
+        font-size: 18px;
+        color: var(--text-light);
+        letter-spacing: -0.01em;
+      }
+
+      .header-logo .version-badge {
+        font-size: 12px;
+        background-color: var(--primary-light);
+        color: var(--primary-color);
+        padding: 2px 8px;
+        border-radius: 12px;
+        margin-left: 8px;
+        font-weight: 500;
+      }
+
+      .footer {
+        padding: 24px 16px;
+        text-align: center;
+        font-size: 13px;
+        color: var(--text-muted);
+        border-top: 1px solid var(--border-color);
+        background-color: var(--bg-darker);
+      }
+
+      .np-branding {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 12px;
+        padding: 8px 16px;
+        border-radius: 40px;
+        background-color: rgba(30, 41, 59, 0.5);
+        width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+        transition: all 0.3s ease;
+      }
+
+      .np-branding:hover {
+        background-color: rgba(30, 41, 59, 0.8);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .np-branding img {
+        height: 22px;
+        width: auto;
+      }
+
+      .np-branding span {
+        font-weight: 500;
+        font-size: 14px;
+        color: var(--text-muted);
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--bg-darker);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+      }
+
+      rapi-doc::part(api-method) {
+        border-radius: 4px;
+        font-weight: 600;
+        padding: 4px 8px;
+      }
+
+      rapi-doc::part(pre-code) {
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      rapi-doc::part(section-endpoint) {
+        border-radius: 8px;
+        border: 1px solid var(--card-border);
+        overflow: hidden;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        background-color: var(--card-bg);
+      }
+
+      rapi-doc::part(section-endpoint):hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      }
+
+      rapi-doc::part(btn) {
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: 1px solid var(--button-outline-border);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        background-color: var(--button-bg);
+        color: var(--button-text);
+        padding: 8px 16px;
+      }
+
+      rapi-doc::part(btn):hover {
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        transform: translateY(-1px);
+        background-color: var(--button-hover);
+      }
+
+      rapi-doc::part(btn-outline) {
+        background-color: var(--button-outline-bg);
+        color: var(--button-outline-text);
+        border: 1px solid var(--button-outline-border);
+      }
+
+      rapi-doc::part(btn-outline):hover {
+        background-color: var(--button-outline-border);
+        color: var(--button-text);
+      }
+
+      rapi-doc::part(btn-fill) {
+        background-color: var(--button-bg);
+        color: var(--button-text);
+        border: none;
+      }
+
+      rapi-doc::part(btn-fill):hover {
+        background-color: var(--button-hover);
+      }
+
+      rapi-doc::part(input) {
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+      }
+
+      rapi-doc::part(input):focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+      }
+
+      rapi-doc::part(main-header) {
+        background: linear-gradient(to right, var(--bg-darker), #162032);
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      rapi-doc::part(nav-bar) {
+        background: linear-gradient(to bottom, var(--bg-darker), #0c1425);
+        border-right: 1px solid var(--border-color);
+      }
+
+      rapi-doc::part(main-content) {
+        background-color: var(--bg-content);
+        color: var(--text-light);
+      }
+
+      rapi-doc::part(section-gap) {
+        padding: 24px;
+      }
+
+      rapi-doc::part(section-info) {
+        border-radius: 8px;
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      }
+
+      rapi-doc::part(section-servers) {
+        border-radius: 8px;
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        padding: 16px;
+        margin-bottom: 24px;
+      }
+
+      rapi-doc::part(dropdown) {
+        background-color: var(--bg-content);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-light);
+      }
+
+      rapi-doc::part(server-url) {
+        background-color: var(--code-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--primary-color);
+        padding: 8px 12px;
+        font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono',
+          Menlo, monospace;
+      }
+
+      rapi-doc::part(section-response) {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        border: 1px solid var(--card-border);
+        margin-top: 16px;
+        overflow: hidden;
+      }
+
+      rapi-doc::part(section-response-headers) {
+        background-color: var(--bg-content);
+        border-bottom: 1px solid var(--border-color);
+        padding: 12px 16px;
+      }
+
+      rapi-doc::part(table) {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        border: 1px solid var(--card-border);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      rapi-doc::part(tr) {
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      rapi-doc::part(tr):hover {
+        background-color: var(--tr-hover-bg);
+      }
+
+      rapi-doc::part(th) {
+        background-color: var(--bg-darker);
+        color: var(--text-light);
+        font-weight: 600;
+        text-align: left;
+        padding: 12px 16px;
+      }
+
+      rapi-doc::part(td) {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      rapi-doc::part(schema-description) {
+        color: var(--text-muted);
+      }
+
+      rapi-doc::part(schema-multiline-toggle) {
+        color: var(--primary-color);
+      }
+
+      rapi-doc::part(section-request-body) {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        border: 1px solid var(--card-border);
+        margin-top: 16px;
+        overflow: hidden;
+      }
+
+      rapi-doc::part(section-auth) {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        border: 1px solid var(--card-border);
+        padding: 16px;
+        margin-bottom: 24px;
+      }
+
+      rapi-doc::part(tab-btn) {
+        border-radius: 6px 6px 0 0;
+        font-weight: 500;
+      }
+
+      rapi-doc::part(tab-btn-active) {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      rapi-doc::part(code) {
+        font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono',
+          Menlo, monospace;
+        background-color: var(--code-bg);
+        color: var(--text-light);
+        border-radius: 4px;
+        padding: 2px 4px;
+      }
+
+      rapi-doc::part(endpoint-path) {
+        font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono',
+          Menlo, monospace;
+        color: var(--text-light);
+        font-weight: 500;
+      }
+
+      rapi-doc::part(status-code) {
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-weight: 600;
+      }
+
+      rapi-doc::part(markdown-body) {
+        color: var(--text-light);
+      }
+
+      rapi-doc::part(markdown-body) h1,
+      rapi-doc::part(markdown-body) h2,
+      rapi-doc::part(markdown-body) h3 {
+        color: var(--text-light);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 8px;
+      }
+
+      rapi-doc::part(markdown-body) a {
+        color: var(--primary-color);
+      }
+
+      rapi-doc::part(markdown-body) blockquote {
+        border-left: 4px solid var(--primary-color);
+        background-color: var(--bg-darker);
+      }
+
+      rapi-doc::part(api-method-get) {
+        background-color: #0891b2;
+      }
+
+      rapi-doc::part(api-method-post) {
+        background-color: #059669;
+      }
+
+      rapi-doc::part(api-method-put) {
+        background-color: #9333ea;
+      }
+
+      rapi-doc::part(api-method-delete) {
+        background-color: #dc2626;
+      }
+
+      rapi-doc::part(api-method-patch) {
+        background-color: #d97706;
+      }
+
+      rapi-doc::part(endpoint-head) {
+        background-color: var(--bg-darker);
+        border-bottom: 1px solid var(--border-color);
+        padding: 16px;
+      }
+
+      rapi-doc::part(endpoint-body) {
+        padding: 16px;
+      }
+
+      rapi-doc::part(search-wrapper) {
+        margin: 16px;
+      }
+
+      rapi-doc::part(search-input) {
+        background-color: var(--bg-content);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-light);
+        padding: 8px 12px;
+        width: 100%;
+      }
+
+      rapi-doc::part(search-input):focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+      }
+
+      rapi-doc::part(try-btn) {
+        background-color: var(--button-bg);
+        color: var(--button-text);
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-weight: 500;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+      }
+
+      rapi-doc::part(try-btn):hover {
+        background-color: var(--button-hover);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        transform: translateY(-1px);
+      }
+
+      rapi-doc::part(execute-btn) {
+        background-color: var(--button-bg);
+        color: var(--button-text);
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-weight: 500;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+      }
+
+      rapi-doc::part(execute-btn):hover {
+        background-color: var(--button-hover);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        transform: translateY(-1px);
+      }
+
+      rapi-doc::part(clear-btn) {
+        background-color: var(--button-outline-bg);
+        color: var(--button-outline-text);
+        border: 1px solid var(--button-outline-border);
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+
+      rapi-doc::part(clear-btn):hover {
+        background-color: var(--button-outline-border);
+        color: var(--button-text);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+      }
+
+      rapi-doc::part(auth-btn) {
+        background-color: var(--button-bg);
+        color: var(--button-text);
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-weight: 500;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+      }
+
+      rapi-doc::part(auth-btn):hover {
+        background-color: var(--button-hover);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        transform: translateY(-1px);
+      }
+    </style>
   </head>
   <body>
     <rapi-doc
       spec-url="{{ schema_url }}"
+      theme="dark"
       allow-authentication="true"
       allow-search="true"
       allow-try="true"
-      theme="dark"
-      schema-style="table"
-      show-method-in-nav-bar="as-colored-text"
-      allow-server-selection="false"
-      show-header="true"
-      info-description-headings-in-navbar="true"
       persist-auth="true"
+      schema-style="table"
       schema-description-expanded="true"
+      show-header="true"
+      heading-text="NP Platform API Explorer"
+      show-method-in-nav-bar="as-colored-block"
+      info-description-headings-in-navbar="true"
+      schema-expand-level="2"
+      nav-activation-behavior="click-only"
+      render-style="focused"
+      default-schema-tab="example"
+      bg-color="#111827"
+      text-color="#f8fafc"
+      primary-color="#3b82f6"
+      nav-bg-color="#0a0f1d"
+      nav-text-color="#f8fafc"
+      nav-hover-bg-color="rgba(59, 130, 246, 0.1)"
+      nav-hover-text-color="#3b82f6"
+      nav-accent-color="#3b82f6"
+      regular-font="Inter"
+      mono-font="'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace"
     >
+      <div slot="logo" class="header-logo">
+        <img
+          src="https://nullchemy.com/static/media/nullchemy_new_logo_3d.238319aebab004ffd436.png"
+          alt="NP Platform Logo"
+        />
+        <span
+          >NP Platform API
+          <span class="version-badge"
+            >{{ api_version|default("v1.0.0") }}</span
+          ></span
+        >
+      </div>
+
+      <div slot="footer" class="footer">
+        <p>
+          © {{ current_year|default("2025") }} NP Platform. All rights reserved.
+        </p>
+        <div class="np-branding">
+          <img
+            src="https://nullchemy.com/static/media/nullchemy_new_logo_3d.238319aebab004ffd436.png"
+            alt="NP Platform"
+          />
+          <span>Powered by NP Platform</span>
+        </div>
+      </div>
     </rapi-doc>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        if (
+          window.location.hostname === 'localhost' ||
+          window.location.hostname === '127.0.0.1'
+        ) {
+          const rapidocEl = document.querySelector('rapi-doc')
+          rapidocEl.addEventListener('spec-loaded', () => {
+            const apiBase = `${window.location.protocol}//${window.location.hostname}:${window.location.port}/api`
+            rapidocEl.setApiServer(apiBase)
+          })
+        }
+      })
+    </script>
   </body>
 </html>

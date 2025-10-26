@@ -1,72 +1,64 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from wenotify.core.logging import logger
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pathlib import Path
-
-from app.api.routes import api_router
+from fastapi import FastAPI, Request, Depends, BackgroundTasks, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.templating import Jinja2Templates
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from wenotify.core.config import settings
-from wenotify.db.session import get_async_db
-from wenotify.tasks import daily_tasks
-
-scheduler = AsyncIOScheduler(timezone="Africa/Nairobi")
-
-
-async def scheduled_task_wrapper():
-    """Wrapper to create a new session for scheduled tasks"""
-    async with get_async_db() as session:
-        await daily_tasks(session)
-
+from app.api.routes import api_router
+from wenotify.core.exceptions import setup_exception_handlers
+from wenotify.core.logging import logging
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
-    scheduler.add_job(func=scheduled_task_wrapper, trigger="interval", days=1)
-    scheduler.start()
-    logger.info("Started scheduler for daily tasks")
-
+    logging.basicConfig(level=logging.INFO)
+    logging.info("Starting wenotify System API...")
     yield
-
-    scheduler.shutdown()
-    logger.info("Shut down scheduler")
+    logging.info("Shutting down...")
 
 
 app = FastAPI(
-    title="WenotiFy Kenya API",
-    description="A simple FastAPI application with modern features and lifecycle events",
-    version="1.0.0",
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description="WenotiFy Kenya",
+    debug=settings.ENVIRONMENT.lower() == "development",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
     lifespan=lifespan,
-    docs_url=None,
-    redoc_url=None,
+    contact={
+        "name": "wenotify System",
+        "url": "https://wenotify.co.ke",
+        "email": "support@wenotify.co.ke",
+    },
+    license_info={
+        "name": "Apache 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
+    },
 )
-
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-app.include_router(api_router, prefix=settings.API_V1_STR)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-
-directory = Path(__file__).joinpath("../../").resolve()
+directory = Path(__file__).joinpath("../../static").resolve()
 templates = Jinja2Templates(directory)
 
-
-@app.get("/docs/", response_class=HTMLResponse, include_in_schema=False)
-def view_documentations(request: Request):
+@app.get("/rapi-docs", include_in_schema=False)
+async def rapi_docs(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
-        "static/docs.html",
+        "/docs.html",
         {
             "request": request,
             "schema_url": "/openapi.json",
@@ -75,7 +67,26 @@ def view_documentations(request: Request):
     )
 
 
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Global exception: {exc}")
-    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+app.include_router(api_router, prefix="/api/v1")
+
+
+setup_exception_handlers(app)
+
+
+@app.get("/")
+async def root():
+    return {
+        "message": "wenotify API",
+        "version": settings.VERSION,
+        "status": "running",
+    }
+
+from fastapi import WebSocket
+
+
+@app.websocket("/ws/echo")
+async def websocket_endpoint(ws: WebSocket):
+    await ws.accept()
+    while True:
+        data = await ws.receive_text()
+        await ws.send_text(f"Echo: {data}")
